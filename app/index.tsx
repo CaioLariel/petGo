@@ -29,6 +29,7 @@ export default function Index() {
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalData | null>(null);
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [isAddingAnimal, setIsAddingAnimal] = useState(false);
 
   const fetchAnimals = useCallback(async () => {
     try {
@@ -95,12 +96,19 @@ export default function Index() {
     setSelectedAnimal(null);
   };
 
-  const handleSelectLocation = () => setModalVisible(true);
+  const handleStartAddAnimal = () => {
+    setIsAddingAnimal(true);
+  };
 
-  const resetFormState = () => {
+  const handleConfirmLocation = () => {
+    setModalVisible(true);
+  };
+
+  const resetFormAndPin = () => {
     setAnimalData({ id: "", name: "", species: "", breed: "", health_status: "" });
     setImageUri(null);
     setModalVisible(false);
+    setIsAddingAnimal(false);
   };
 
   const handleCreateAnimal = async () => {
@@ -140,14 +148,16 @@ export default function Index() {
           : require("../assets/images/gato.png"),
       };
       setMarkers(prevMarkers => [...prevMarkers, newMarker]);
-      resetFormState();
+      resetFormAndPin();
     } catch (err) {
       console.error(err);
       Alert.alert("Erro", "Não foi possível cadastrar o animal.");
     }
   };
 
-  const handleCancel = () => resetFormState();
+  const handleCancel = () => {
+    resetFormAndPin();
+  };
 
   if (loading || !region || !location) {
     return (
@@ -179,14 +189,27 @@ export default function Index() {
           ))}
       </MapView>
 
-      <View style={styles.centralPinContainer}>
-        <Image source={require('../assets/images/pin.png')} style={styles.centralPin} />
-      </View>
+      {isAddingAnimal && (
+        <View style={styles.centralPinContainer}>
+          <Image source={require('../assets/images/pin.png')} style={styles.centralPin} />
+        </View>
+      )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleSelectLocation}>
-          <Text style={styles.actionButtonText}>Identificar Animal Neste Ponto</Text>
-        </TouchableOpacity>
+        {isAddingAnimal ? (
+          <View style={styles.addingButtonsRow}>
+            <TouchableOpacity style={[styles.actionButton, styles.cancelAddButton]} onPress={handleCancel}>
+              <Text style={styles.actionButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.confirmAddButton]} onPress={handleConfirmLocation}>
+              <Text style={styles.actionButtonText}>Confirmar Ponto</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.actionButton} onPress={handleStartAddAnimal}>
+            <Text style={styles.actionButtonText}>Adicionar Animal</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <Modal visible={modalVisible} animationType="fade" transparent onRequestClose={handleCancel}>
@@ -219,4 +242,18 @@ const styles = StyleSheet.create({
   actionButton: { backgroundColor: '#3498db', paddingVertical: 15, borderRadius: 25, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 },
   actionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   markerIcon: { width: 40, height: 40 },
+  addingButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelAddButton: {
+    backgroundColor: '#e74c3c',
+    flex: 1,
+    marginRight: 10,
+  },
+  confirmAddButton: {
+    backgroundColor: '#27ae60',
+    flex: 1,
+    marginLeft: 10,
+  },
 });
