@@ -9,31 +9,36 @@ import {
   Alert,
   Platform,
   Text,
-  TouchableOpacity, // Importado para o botão personalizado
+  TouchableOpacity,
 } from "react-native";
-import MapView, { Marker, Region } from "react-native-maps"; // MapPressEvent não é mais necessário
+import MapView, { Marker, Region } from "react-native-maps";
 import AnimalForm from "../components/AnimalForm";
+import AnimalDetailCard from "../components/AnimalDetailCard";
 import { UserLocation, AnimalData } from "./types";
 
-const API_URL = "https://petgo-backend-api.onrender.com/animals";
+const BASE_API_URL = "https://petgo-backend-api.onrender.com";
+const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
 
 export default function Index() {
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [loading, setLoading] = useState(true);
   const [region, setRegion] = useState<Region | null>(null);
-  const [animalData, setAnimalData] = useState<AnimalData>({ id: "", name: "", species: "", breed: "" });
+  const [animalData, setAnimalData] = useState<AnimalData>({ id: "", name: "", species: "", breed: "", health_status: "" });
   const [modalVisible, setModalVisible] = useState(false);
   const [markers, setMarkers] = useState<AnimalData[]>([]);
+  const [selectedAnimal, setSelectedAnimal] = useState<AnimalData | null>(null);
+  const [isCardVisible, setIsCardVisible] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   const fetchAnimals = useCallback(async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(ANIMALS_ENDPOINT);
       if (!response.ok) throw new Error("Erro ao buscar animais");
       const data: AnimalData[] = await response.json();
 
       const formattedMarkers = data.map(animal => ({
         ...animal,
-        icon: animal.species === "cachorro"
+        icon: animal.species.toLowerCase() === "cachorro"
           ? require("../assets/images/cachorro.png")
           : require("../assets/images/gato.png"),
       }));
@@ -46,7 +51,6 @@ export default function Index() {
 
   useEffect(() => {
     let locationSubscription: Location.LocationSubscription | null = null;
-
     const initialize = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -56,34 +60,94 @@ export default function Index() {
       }
 
       const initialLocation = await Location.getCurrentPositionAsync({});
-      const coords = {
-        latitude: initialLocation.coords.latitude,
-        longitude: initialLocation.coords.longitude,
-      };
+      const coords = { latitude: initialLocation.coords.latitude, longitude: initialLocation.coords.longitude };
       setLocation(coords);
-      setRegion({
-        ...coords,
-        latitudeDelta: 0.005, // Zoom mais próximo para facilitar a seleção
-        longitudeDelta: 0.005,
-      });
+      setRegion({ ...coords, latitudeDelta: 0.005, longitudeDelta: 0.005 });
 
       locationSubscription = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.Highest, distanceInterval: 1 },
-        (loc) => {
-          setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-        }
+        (loc) => setLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude })
       );
 
       await fetchAnimals();
       setLoading(false);
     };
-
     initialize();
-
-    return () => {
-      locationSubscription?.remove();
-    };
+    return () => { locationSubscription?.remove(); };
   }, [fetchAnimals]);
+
+  const handleMarkerPress = async (animalId: number | string) => {
+    try {
+      setIsCardVisible(true);
+      const response = await fetch(`${ANIMALS_ENDPOINT}/${animalId}`);
+      if (!response.ok) throw new Error("Animal não encontrado");
+      const data: AnimalData = await response.json();
+      setSelectedAnimal(data);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Erro", "Não foi possível carregar as informações do animal.");
+      setIsCardVisible(false);
+    }
+  };
+
+  const handleCloseCard = () => {
+    setIsCardVisible(false);
+    setSelectedAnimal(null);
+  };
+
+  const handleSelectLocation = () => setModalVisible(true);
+
+  const resetFormState = () => {
+    setAnimalData({ id: "", name: "", species: "", breed: "", health_status: "" });
+    setImageUri(null);
+    setModalVisible(false);
+  };
+
+  const handleCreateAnimal = async () => {
+    if (!animalData.name || !animalData.species || !animalData.breed || !animalData.health_status || !imageUri) {
+      Alert.alert("Campos obrigatórios", "Por favor, preencha todos os campos e selecione uma imagem.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', animalData.name);
+    formData.append('species', animalData.species);
+    formData.append('breed', animalData.breed);
+    formData.append('health_status', animalData.health_status);
+    formData.append('latitude', String(region?.latitude));
+    formData.append('longitude', String(region?.longitude));
+    formData.append('created_by', '1');
+
+    const filename = imageUri.split('/').pop();
+    const match = /\.(\w+)$/.exec(filename!);
+    const type = match ? `image/${match[1]}` : `image`;
+    formData.append('image', { uri: imageUri, name: filename, type } as any);
+
+    try {
+      const response = await fetch(ANIMALS_ENDPOINT, {
+        method: "POST",
+        body: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (!response.ok) throw new Error("Erro ao cadastrar animal");
+
+      const newAnimal = await response.json();
+      const newMarker = {
+        ...newAnimal,
+        icon: newAnimal.species.toLowerCase() === "cachorro"
+          ? require("../assets/images/cachorro.png")
+          : require("../assets/images/gato.png"),
+      };
+      setMarkers(prevMarkers => [...prevMarkers, newMarker]);
+      resetFormState();
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Erro", "Não foi possível cadastrar o animal.");
+    }
+  };
+
+  const handleCancel = () => resetFormState();
 
   if (loading || !region || !location) {
     return (
@@ -93,64 +157,12 @@ export default function Index() {
     );
   }
 
-  // Abre o modal para o usuário preencher os dados do animal
-  const handleSelectLocation = () => {
-    setModalVisible(true);
-  };
-
-  const resetFormState = () => {
-    setAnimalData({ id: "", name: "", species: "", breed: "" });
-    setModalVisible(false);
-  };
-
-  const handleCreateAnimal = async () => {
-    if (!animalData.name || !animalData.species || !animalData.breed) {
-      Alert.alert("Campos obrigatórios", "Por favor, preencha todos os campos.");
-      return;
-    }
-
-    try {
-      // Usa a latitude e longitude do centro do mapa (que está no estado 'region')
-      const payload = {
-        ...animalData,
-        latitude: region?.latitude,
-        longitude: region?.longitude,
-        created_by: 1,
-      };
-
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Erro ao cadastrar animal");
-
-      const newAnimal = await response.json();
-      const newMarker = {
-        ...newAnimal,
-        icon: newAnimal.species === "cachorro"
-          ? require("../assets/images/cachorro.png")
-          : require("../assets/images/gato.png"),
-      };
-      setMarkers(prevMarkers => [...prevMarkers, newMarker]);
-      resetFormState();
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Erro", "Não foi possível cadastrar o animal. Tente novamente.");
-    }
-  };
-
-  const handleCancel = () => {
-    resetFormState();
-  };
-
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
         region={region}
-        onRegionChangeComplete={setRegion} // Atualiza a região central quando o usuário move o mapa
+        onRegionChangeComplete={setRegion}
         showsUserLocation
         showsMyLocationButton={false}
       >
@@ -160,101 +172,51 @@ export default function Index() {
             <Marker
               key={m.id}
               coordinate={{ latitude: m.latitude!, longitude: m.longitude! }}
-              title={m.name}
-              description={`Raça: ${m.breed}`}
+              onPress={() => handleMarkerPress(m.id)}
             >
               <Image source={m.icon} style={styles.markerIcon} />
             </Marker>
           ))}
       </MapView>
 
-      {/* Pino central que fica fixo sobre o mapa */}
       <View style={styles.centralPinContainer}>
-        <Image
-          source={require('../assets/images/pin.png')} // Lembre-se de adicionar a imagem!
-          style={styles.centralPin}
-        />
+        <Image source={require('../assets/images/pin.png')} style={styles.centralPin} />
       </View>
 
-      {/* Botão estilizado para confirmar a localização */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.actionButton} onPress={handleSelectLocation}>
           <Text style={styles.actionButtonText}>Identificar Animal Neste Ponto</Text>
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={modalVisible}
-        animationType="fade"
-        transparent
-        onRequestClose={handleCancel}
-      >
+      <Modal visible={modalVisible} animationType="fade" transparent onRequestClose={handleCancel}>
         <AnimalForm
           animalData={animalData}
           setAnimalData={setAnimalData}
+          imageUri={imageUri}
+          setImageUri={setImageUri}
           onSave={handleCreateAnimal}
           onCancel={handleCancel}
         />
       </Modal>
+
+      <AnimalDetailCard
+        animal={selectedAnimal}
+        visible={isCardVisible}
+        onClose={handleCloseCard}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  // Estilo para o container do pino central
-  centralPinContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    // Centraliza a imagem do pino pelo seu centro, não pelo canto
-    transform: [{ translateX: -25 }, { translateY: -50 }],
-  },
-  // Estilo para a imagem do pino
-  centralPin: {
-    width: 30,
-    height: 50,
-  },
-  buttonContainer: {
-    position: "absolute",
-    bottom: 40,
-    left: 20,
-    right: 20,
-  },
-  // Estilo para o botão de ação principal
-  actionButton: {
-    backgroundColor: '#3498db',
-    paddingVertical: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  // Estilo para o texto do botão de ação
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  markerIcon: {
-    width: 40,
-    height: 40,
-  },
+  container: { flex: 1 },
+  map: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f0f0f0" },
+  centralPinContainer: { position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -15 }, { translateY: -25 }] },
+  centralPin: { width: 30, height: 50 },
+  buttonContainer: { position: "absolute", bottom: 40, left: 20, right: 20 },
+  actionButton: { backgroundColor: '#3498db', paddingVertical: 15, borderRadius: 25, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 },
+  actionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  markerIcon: { width: 40, height: 40 },
 });
