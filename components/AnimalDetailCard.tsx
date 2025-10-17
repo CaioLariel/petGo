@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ActivityIndicator, Linking, Alert } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import { AnimalData } from "../app/types";
 
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
@@ -11,7 +12,6 @@ interface AnimalDetailCardProps {
 }
 
 export default function AnimalDetailCard({ animal, visible, onClose }: AnimalDetailCardProps) {
-  // Renderiza um loader se os dados do animal ainda não estiverem carregados
   if (!animal) {
     return (
       <Modal visible={visible} transparent>
@@ -22,16 +22,19 @@ export default function AnimalDetailCard({ animal, visible, onClose }: AnimalDet
     );
   }
 
-  
+  const handleNavigate = () => {
+    if (!animal.latitude || !animal.longitude) {
+      Alert.alert("Erro", "A localização deste animal não está disponível.");
+      return;
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${animal.latitude},${animal.longitude}`;
+    Linking.openURL(url).catch(err => Alert.alert("Erro", "Não foi possível abrir o Google Maps."));
+  };
+
   const imageUrl = animal.image_url ? `${BASE_API_URL}/${animal.image_url.replace(/\\/g, '/')}` : null;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
         <View style={styles.cardContainer}>
           {imageUrl ? (
@@ -47,8 +50,10 @@ export default function AnimalDetailCard({ animal, visible, onClose }: AnimalDet
             <Text style={styles.animalInfo}>Raça: {animal.breed}</Text>
             <Text style={styles.animalInfo}>Estado: {animal.health_status}</Text>
           </View>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Fechar</Text>
+          
+          <TouchableOpacity style={styles.navigateButton} onPress={handleNavigate}>
+            <FontAwesome name="map-marker" size={20} color="#fff" />
+            <Text style={styles.navigateButtonText}>Ir até o Animal</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -57,54 +62,32 @@ export default function AnimalDetailCard({ animal, visible, onClose }: AnimalDet
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardContainer: {
-    width: "85%",
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    overflow: 'hidden', 
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  animalImage: {
-    width: "100%",
-    height: 200,
-    backgroundColor: '#eee',
-  },
-  placeholderImage: {
-    justifyContent: 'center',
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.6)", justifyContent: "center", alignItems: "center" },
+  cardContainer: { width: "85%", backgroundColor: "#fff", borderRadius: 15, overflow: 'hidden', alignItems: "center", paddingTop: 0 },
+  animalImage: { width: "100%", height: 200, backgroundColor: '#eee' },
+  placeholderImage: { justifyContent: 'center', alignItems: 'center' },
+  infoContainer: { padding: 20, width: '100%' },
+  animalName: { fontSize: 24, fontWeight: "bold", textAlign: "center", marginBottom: 15 },
+  animalInfo: { fontSize: 16, marginBottom: 8, color: '#333' },
+  navigateButton: {
+    flexDirection: 'row',
+    backgroundColor: '#27ae60',
+    paddingVertical: 15,
+    borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  infoContainer: {
-    padding: 20,
-    width: '100%',
-  },
-  animalName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  animalInfo: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#333',
-  },
-  closeButton: {
-    marginTop: 10,
-    backgroundColor: '#3498db',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  closeButtonText: {
+  navigateButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
 });
