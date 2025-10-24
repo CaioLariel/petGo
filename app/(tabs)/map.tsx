@@ -15,6 +15,7 @@ import MapView, { Marker, Region } from "react-native-maps";
 import AnimalDetailCard from "../../components/AnimalDetailCard";
 import AnimalForm from "../../components/AnimalForm";
 import { AnimalData, UserLocation } from "../types";
+import { useAuth } from "../../context/AuthContext"; // 1. Importe o hook
 
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
 const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
@@ -30,6 +31,9 @@ export default function MapScreen() {
   const [isCardVisible, setIsCardVisible] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isAddingAnimal, setIsAddingAnimal] = useState(false);
+
+  // 2. Pegue o userId e o logout do contexto
+  const { userId, logout } = useAuth();
 
   const fetchAnimals = useCallback(async () => {
     try {
@@ -117,6 +121,16 @@ export default function MapScreen() {
       return;
     }
 
+    // 3. Verificação de segurança
+    if (!userId) {
+      Alert.alert(
+        "Erro de Autenticação", 
+        "Seu login expirou. Por favor, faça login novamente."
+      );
+      await logout();
+      return;
+    }
+
     const formData = new FormData();
     formData.append('name', animalData.name);
     formData.append('species', animalData.species);
@@ -124,7 +138,9 @@ export default function MapScreen() {
     formData.append('health_status', animalData.health_status);
     formData.append('latitude', String(region?.latitude));
     formData.append('longitude', String(region?.longitude));
-    formData.append('created_by', '1');
+
+    // 4. USE O userId AQUI
+    formData.append('created_by', userId);
 
     const filename = imageUri.split('/').pop();
     const match = /\.(\w+)$/.exec(filename!);

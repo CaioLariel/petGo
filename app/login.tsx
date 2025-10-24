@@ -9,8 +9,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-// Importe Link, useRouter e Stack do Expo Router
-import { Link, useRouter, Stack } from 'expo-router';
+import { Link, Stack } from 'expo-router';
+import { useAuth } from '../context/AuthContext'; // 1. Importe o hook
 
 // URL da sua API de login
 const API_URL = 'https://petgo-backend-api.onrender.com/users/login';
@@ -21,8 +21,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // router é usado para navegar programaticamente
-  const router = useRouter();
+  const { login } = useAuth(); // 2. Pegue a função de login
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,13 +47,9 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (data.status === 'success') {
-        // Sucesso!
-        // No app real, você salvaria o data.data.token no AsyncStorage
-        Alert.alert('Sucesso', data.message);
-        
-        // Redireciona o usuário para o MAPA DENTRO DO GRUPO DE ABAS
-        // e limpa o histórico de navegação (para não poder "voltar" para o login)
-        router.replace('/(tabs)/map'); 
+        // 3. Chame a função login do contexto
+        await login(data.data);
+        // O AuthContext cuidará do redirecionamento!
       } else {
         // Erro vindo da API
         setError(data.message || 'Credenciais inválidas.');
