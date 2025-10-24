@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import * as Location from 'expo-location';
 import { getDistance } from 'geolib';
-import Slider from '@react-native-community/slider';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import { AnimalData, UserLocation } from './types';
-import AnimalDetailCard from '../components/AnimalDetailCard';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import AnimalDetailCard from '../../components/AnimalDetailCard';
+import { AnimalData, UserLocation } from '../types';
 
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
 const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
@@ -111,7 +111,7 @@ export default function NearbyScreen() {
     return (
       <TouchableOpacity style={styles.itemContainer} onPress={() => handleAnimalPress(item)}>
         <Image 
-          source={imageUrl ? { uri: imageUrl } : require('../assets/images/placeholder.png')} 
+          source={imageUrl ? { uri: imageUrl } : require('../../assets/images/placeholder.png')} 
           style={styles.itemImage} 
         />
         <View style={styles.itemContent}>

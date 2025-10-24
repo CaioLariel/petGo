@@ -1,20 +1,20 @@
 import * as Location from "expo-location";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  StyleSheet,
-  View,
-  Modal,
   Alert,
+  Image,
+  Modal,
   Platform,
+  StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
-import AnimalForm from "../components/AnimalForm";
-import AnimalDetailCard from "../components/AnimalDetailCard";
-import { UserLocation, AnimalData } from "./types";
+import AnimalDetailCard from "../../components/AnimalDetailCard";
+import AnimalForm from "../../components/AnimalForm";
+import { AnimalData, UserLocation } from "../types";
 
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
 const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
@@ -40,8 +40,8 @@ export default function MapScreen() {
       const formattedMarkers = data.map(animal => ({
         ...animal,
         icon: animal.species.toLowerCase() === "cachorro"
-          ? require("../assets/images/cachorro.png")
-          : require("../assets/images/gato.png"),
+          ? require("../../assets/images/cachorro.png")
+          : require("../../assets/images/gato.png"),
       }));
       setMarkers(formattedMarkers);
     } catch (err) {
@@ -144,8 +144,8 @@ export default function MapScreen() {
       const newMarker = {
         ...newAnimal,
         icon: newAnimal.species.toLowerCase() === "cachorro"
-          ? require("../assets/images/cachorro.png")
-          : require("../assets/images/gato.png"),
+          ? require("../../assets/images/cachorro.png")
+          : require("../../assets/images/gato.png"),
       };
       setMarkers(prevMarkers => [...prevMarkers, newMarker]);
       resetFormAndPin();
@@ -191,7 +191,7 @@ export default function MapScreen() {
 
       {isAddingAnimal && (
         <View style={styles.centralPinContainer}>
-          <Image source={require('../assets/images/pin.png')} style={styles.centralPin} />
+          <Image source={require('../../assets/images/pin.png')} style={styles.centralPin} />
         </View>
       )}
 
