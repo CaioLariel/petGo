@@ -13,6 +13,7 @@ import { Link, Stack } from 'expo-router';
 import { useAuth } from '../context/AuthContext'; // 1. Importe o hook
 
 // URL da sua API de login
+// const API_URL = 'http://localhost:3000/users/login';
 const API_URL = 'https://petgo-backend-api.onrender.com/users/login';
 
 export default function LoginScreen() {

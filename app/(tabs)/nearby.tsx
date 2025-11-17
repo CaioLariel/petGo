@@ -7,6 +7,7 @@ import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity,
 import AnimalDetailCard from '../../components/AnimalDetailCard';
 import { AnimalData, UserLocation } from '../types';
 
+// const BASE_API_URL = "http://localhost:3000";
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
 const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
 const ITEMS_PER_PAGE = 10;

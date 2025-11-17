@@ -17,6 +17,7 @@ import AnimalForm from "../../components/AnimalForm";
 import { AnimalData, UserLocation } from "../types";
 import { useAuth } from "../../context/AuthContext"; // 1. Importe o hook
 
+// const BASE_API_URL = "http://localhost:3000";
 const BASE_API_URL = "https://petgo-backend-api.onrender.com";
 const ANIMALS_ENDPOINT = `${BASE_API_URL}/animals`;
 

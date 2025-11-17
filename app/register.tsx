@@ -13,6 +13,7 @@ import {
 import { useRouter, Stack, Link } from 'expo-router';
 
 // URL da sua API para criar usuários
+// const API_URL = 'http://localhost:3000/users'; 
 const API_URL = 'https://petgo-backend-api.onrender.com/users'; 
 
 export default function RegisterScreen() {
