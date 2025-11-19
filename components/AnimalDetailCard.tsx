@@ -27,7 +27,7 @@ export default function AnimalDetailCard({ animal, visible, onClose }: AnimalDet
       Alert.alert("Erro", "A localização deste animal não está disponível.");
       return;
     }
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${animal.latitude},${animal.longitude}`;
+    const url = `https://www.google.com/maps/search/?api=1&query=${animal.latitude},${animal.longitude}`;
     Linking.openURL(url).catch(err => Alert.alert("Erro", "Não foi possível abrir o Google Maps."));
   };
 
