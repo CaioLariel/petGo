@@ -164,6 +164,7 @@ export default function SettingsScreen() {
       <TextInput
         style={styles.input}
         placeholder="Senha atual"
+        placeholderTextColor="#3498db"
         secureTextEntry
         value={currentPassword}
         onChangeText={setCurrentPassword}
@@ -172,6 +173,7 @@ export default function SettingsScreen() {
       <TextInput
         style={styles.input}
         placeholder="Nova senha"
+        placeholderTextColor="#3498db"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
@@ -180,6 +182,7 @@ export default function SettingsScreen() {
       <TextInput
         style={styles.input}
         placeholder="Confirmar nova senha"
+        placeholderTextColor="#3498db"
         secureTextEntry
         value={confirmNew}
         onChangeText={setConfirmNew}
