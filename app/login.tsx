@@ -13,6 +13,7 @@ import { Link, Stack } from 'expo-router';
 import { useAuth } from '../context/AuthContext'; // 1. Importe o hook
 
 // URL da sua API de login
+// const API_URL = 'http://localhost:3000/users/login';
 const API_URL = 'https://petgo-backend-api.onrender.com/users/login';
 
 export default function LoginScreen() {
@@ -73,6 +74,7 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#3498db" 
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -81,6 +83,7 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Senha"
+        placeholderTextColor="#3498db" 
         value={password}
         onChangeText={setPassword}
         secureTextEntry

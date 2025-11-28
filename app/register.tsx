@@ -13,6 +13,7 @@ import {
 import { useRouter, Stack, Link } from 'expo-router';
 
 // URL da sua API para criar usuários
+// const API_URL = 'http://localhost:3000/users'; 
 const API_URL = 'https://petgo-backend-api.onrender.com/users'; 
 
 export default function RegisterScreen() {
@@ -72,18 +73,22 @@ export default function RegisterScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Configura o cabeçalho desta tela */}
       <Stack.Screen options={{ title: 'Criar Conta' }} /> 
+      
 
       <Text style={styles.title}>Crie sua Conta</Text>
+      
       
       <TextInput
         style={styles.input}
         placeholder="Nome Completo"
+        placeholderTextColor="#3498db" 
         value={name}
         onChangeText={setName}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#3498db" 
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -92,6 +97,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="CPF (ex: 123.456.789-00)"
+        placeholderTextColor="#3498db" 
         value={cpf}
         onChangeText={setCpf}
         keyboardType="numeric"
@@ -99,6 +105,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Senha"
+        placeholderTextColor="#3498db" 
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -138,7 +145,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 30,
-    color: '#333',
+    color: '#3498db',
   },
   input: {
     height: 50,
