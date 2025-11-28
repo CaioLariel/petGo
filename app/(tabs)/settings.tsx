@@ -145,6 +145,7 @@ export default function SettingsScreen() {
       <TextInput
         style={styles.input}
         placeholder="Nome completo"
+        placeholderTextColor="#3498db"
         value={name}
         onChangeText={setName}
         editable={!loading}
@@ -152,6 +153,7 @@ export default function SettingsScreen() {
       <TextInput
         style={styles.input}
         placeholder="CPF"
+        placeholderTextColor="#3498db"
         value={cpf}
         onChangeText={setCpf}
         editable={!loading}
